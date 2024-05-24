@@ -26,6 +26,8 @@ class MainProcessor:
 
     def generate_constraints(self) -> Iterator[Identity]:
 
+
+
         for opcode, arguments in self.program:
             yield self.opcode[instruction](arguments*)
 

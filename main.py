@@ -7,4 +7,4 @@ cpu_instructions = load("File.asm")
 mp.load_program(cpu_instructions)
 
 pil = generate_pil(mp.generate_constraints())
-proof = run(pil)
+
