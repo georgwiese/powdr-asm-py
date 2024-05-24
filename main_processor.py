@@ -1,5 +1,11 @@
 from typing import Iterator
 
+class AsignmentRegister:
+    """
+    Has const witness column
+    """
+    pass
+
 
 class Register:
     pass
@@ -19,6 +25,14 @@ class MainProcessor:
     @property
     def instructions(self):
         pass
+
+    @instruction
+    def _return(self) -> Iterator[Identity]:
+        """
+        fills the instructions until the end
+        :return:
+        """
+        yield self.pc.n == self.pc
 
 
     def load_program(self, program: Program):
