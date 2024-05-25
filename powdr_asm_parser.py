@@ -6,8 +6,8 @@ Program = List[Dict]
 
 def parse_expression(expression):
     # Define grammar for parsing expressions
-    variable = Word(alphas)
-    constant = Word(nums)
+    variable = Group(Word(alphas))("variable")
+    constant = Group(Word(nums))("constant")
     operand = variable | constant
 
     mult = Literal("*")
@@ -16,8 +16,8 @@ def parse_expression(expression):
     plus_minus = Group(plus | minus)("sign")
 
     expr = Forward()
-    term = Group(operand("first_operand") + Optional(Group((mult + operand("second_operand")))))
-    expr <<= OneOrMore(Optional(plus_minus) + term) + ZeroOrMore(plus_minus + term)
+    summands = Group(plus_minus("sign") + operand("first_factor") + Optional(Group((mult + operand("second_factor")))))
+    expr <<= OneOrMore(summands)
 
     parse_result = expr.parseString(expression, parseAll=True)
 
