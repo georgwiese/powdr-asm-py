@@ -51,12 +51,13 @@ class RiscVProcessor(AbstractProcessor):
 program = """
     A <== A + 3;
     A <== decr(A);
-    branch_if_zero(A-2, 1);
+    // If A is 2, decrement again
+    branch_if_zero(A - 2, 1);
     A <== incr(A + 3);
     A <== decr(A);
     mstore(3, 4);
     A <== mload(3);
-    A, B <== funky(A+3, B-4);
+    A, B <== funky(A + 3, B - 4);
     return;
 """
 
