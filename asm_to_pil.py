@@ -62,6 +62,8 @@ def transform_vm(registers: List[str],
                  program: List[Statement],
                  machines) -> PIL:
     
+    print(instructions)
+    
     assert len(machines) <= 1
     permutation_rhs_selectors = []
 

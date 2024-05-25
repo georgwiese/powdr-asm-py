@@ -26,11 +26,12 @@ def _collect_yielded_and_return(iterator: Iterator) -> tuple[list, Any]:
             return yielded, e.value
 
 
-def instruction(func: Callable | None = None, *, name: str | None = None):
+def instruction(func: Callable | None = None, *, name: str | None = None, outputs: tuple[str] = ()):
     def _instruction(func: Callable, name: str):
         if name is None:
             name = func.__name__
         func._instruction_name = name
+        func._instruction_outputs = outputs
         signature = inspect.signature(func)
         if _parameters_start_with_cls(signature.parameters):
             func = classmethod(func)
@@ -64,12 +65,19 @@ class AbstractProcessor:
             # for efficiency in the future:
             kwargs = {}
             input_names = []
+            used_outputs = 0
             for parameter in signature.parameters:
                 if parameter == "cls":
                     kwargs["cls"] = cls
                 elif parameter == "num_steps":
                     kwargs["num_steps"] = num_steps
+                elif parameter in instruction_fn._instruction_outputs:
+                    input_name = f"OUT_{used_outputs}"
+                    used_outputs += 1
+                    input_names.append(input_name)
+                    kwargs[parameter] = WitnessColumn(input_name)
                 else:
+                    assert used_outputs == 0, "Inputs must come before outputs"
                     input_name = f"IN_{len(input_names)}"
                     input_names.append(input_name)
                     kwargs[parameter] = WitnessColumn(input_name)
@@ -83,7 +91,8 @@ class AbstractProcessor:
             elif isinstance(output_expressions, Expression):
                 output_expressions = (output_expressions, )
 
-            output_names = [f"OUT_{i}" for i in range(len(output_expressions))]
+            used_outputs += len(output_expressions)
+            output_names = [f"OUT_{i}" for i in range(used_outputs)]
             output_columns = [WitnessColumn(name) for name in output_names]
             output_constraints = [
                 column == expression
@@ -94,7 +103,7 @@ class AbstractProcessor:
             instructions.append(
                 Instruction(
                     name,
-                    inputs=input_names,
+                    inputs=[n for n in input_names if n.startswith("IN")],
                     outputs=output_names,
                     constraints=output_constraints + yielded_constraints
                 )

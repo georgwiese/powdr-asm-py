@@ -39,6 +39,11 @@ class RiscVProcessor(AbstractProcessor):
         step = FixedColumn("STEP", "i")
         yield from memory.mstore(step, addr, value)
 
+    @instruction(outputs=("value",))
+    def mload(addr, value):
+        step = FixedColumn("STEP", "i")
+        yield from memory.mload(step, addr, value)
+
     @instruction(name="return")
     def _return(cls):
         yield cls.pc.n == cls.pc
@@ -50,6 +55,7 @@ program = """
     A <== incr(A + 3);
     A <== decr(A);
     mstore(3, 4);
+    A <== mload(3);
     A, B <== funky(A+3, B-4);
     return;
 """

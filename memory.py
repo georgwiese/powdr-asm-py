@@ -11,6 +11,14 @@ def mstore(step: WitnessColumn, addr: FixedColumn, value: WitnessColumn) -> PIL:
     yield permutation([NumberExpression(1), addr, step, value], [m_is_write, m_addr, m_step, m_value])
 
 
+def mload(step: WitnessColumn, addr: FixedColumn, value: WitnessColumn) -> PIL:
+    m_addr = WitnessColumn("m_addr")
+    m_step = WitnessColumn("m_step")
+    m_value = WitnessColumn("m_value")
+    m_is_write = WitnessColumn("m_is_write")
+    yield permutation([NumberExpression(0), addr, step, value], [m_is_write, m_addr, m_step, m_value])
+
+
 def memory(selectors: List[Expression]) -> PIL:
     
     # =============== read-write memory =======================
