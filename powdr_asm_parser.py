@@ -107,7 +107,8 @@ def parse_assembly_line(line):
 def parse_assembly(program):
     result = []
     for line in program.split('\n'):
-        if line and not re.sub(r'\s+', '', line).startswith("//"):
+        line = re.sub(r'\s+', '', line)
+        if line and not line.startswith("//"):
             parsed_line = parse_assembly_line(line)
             statement = Statement(parsed_line['instruction'], parsed_line['inputs'], parsed_line['outputs'])
             result.append(statement)

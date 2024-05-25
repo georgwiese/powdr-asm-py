@@ -43,7 +43,7 @@ def memory(selectors: List[Expression]) -> PIL:
 
     # If the next line is a not a write and we have an address change,
     # then the value is zero.
-    yield (1 - m_is_write.n) * m_change * m_value == 0
+    yield (1 - m_is_write.n) * m_change * m_value.n == 0
 
     # change has to be 1 in the last row, so that a first read on row zero is constrained to return 0
     FIRST = FixedColumn("FIRST", [1] + star([0]))
