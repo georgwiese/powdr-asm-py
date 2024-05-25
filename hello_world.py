@@ -1,4 +1,4 @@
-from powdr import WitnessColumn, Identity, generate_pil
+from powdr import WitnessColumn, Identity, generate_pil, run, PIL
 from asm_to_pil import transform_vm
 from typing import Tuple
 from typing import List, Tuple
@@ -94,4 +94,7 @@ program = [
 ]
 
 
-print(generate_pil(lambda: transform_vm(registers, assignment_registers, instructions, program), 1024))
+def hello_world() -> PIL:
+    return transform_vm(registers, assignment_registers, instructions, program)
+
+run(hello_world, 1024, "bn254")
