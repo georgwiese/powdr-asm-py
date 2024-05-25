@@ -5,6 +5,10 @@ Program = List[Dict]
 
 
 def parse_expression(expression):
+
+    if expression[0] != "+" and expression[0] != "-":
+        expression = "+" + expression
+
     # Define grammar for parsing expressions
     variable = Group(Word(alphas))("variable")
     constant = Group(Word(nums))("constant")
@@ -23,35 +27,35 @@ def parse_expression(expression):
 
     inputs = []
 
-    if multiplication := parse_result.mult:
-        if multiplication.variable[0] == "-":
-            factor = -multiplication.factor
-        else:
-            factor = multiplication.factor
-        inputs.append(
-            (multiplication.variable, factor)
-        )
-
-    if shift_group := parse_result.shift:
-        inputs.append(
-            ("CONST", )
-        )
-
-    #if single_variable := variable.parseString(expression, parseAll=)
-
-    #parsed_expr = term.parseString(expression, parseAll=True)
-
-
-    for term in parsed_expr[0]:
-        if len(term) == 1:
-            # Single operand
-            token = term[0]
-            if token.isalpha():
-                inputs.append((token, 1))  # Assuming variables are 'A', 'B', etc. with weight 1
+    for term in parse_result:
+        if len(term) == 2:
+            if term.sign[0] == "+":
+                sign = 1
             else:
-                inputs.append(("CONST", int(token)))
-        else:
-            pass
+                sign = -1
+
+            if term.variable:
+
+                inputs.append((term.variable[0], sign))
+            else:
+                inputs.append(
+                    ("CONST", sign * int(term.constant[0]))
+                )
+        elif len(term) == 3:
+            if term.sign[0] == "+":
+                sign = 1
+            else:
+                sign = -1
+            if term.variable:
+                inputs.append(
+                    (term.variable[0], sign * int(term[2].constant[0]))
+                )
+            else:
+                inputs.append(
+                    (term[2].variable[0], sign * int(term.constant[0]))
+                )
+
+
     return inputs
 
 

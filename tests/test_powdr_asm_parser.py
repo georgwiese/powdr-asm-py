@@ -3,14 +3,17 @@ from powdr_asm_parser import parse_powdr_assembly_code, parse_expression
 
 
 @pytest.mark.parametrize("expression, expected_output", [
-    ("+A + 3", [("A", 1), ("CONST", 3)]),
-    ("+B * 6 + 1", [("B", 6), ("CONST", 1)]),
-    ("+5 + 10", [("CONST", 5), ("CONST", 10)]),
+    ("A + 3", [("A", 1), ("CONST", 3)]),
+    ("B * 6 + 1", [("B", 6), ("CONST", 1)]),
+    ("5 + 10", [("CONST", 5), ("CONST", 10)]),
     ("-A", [("A", -1)]),
-    ("-2 * A + 1", [("A", -2), ("CONST", 1)])
+    ("-2 * A + 1", [("A", -2), ("CONST", 1)]),
+    ("-2 * A + b * 3 -7", [("A", -2), ("b", 3), ("CONST", -7)]),
+    ("+0 * A - 1 * B -2 + C * 3", [("A", 0), ("B", -1), ("CONST", -2), ("C", 3)]),
 ])
 def test_parse_expression(expression, expected_output):
-    assert parse_expression(expression) == expected_output
+    parsed_expression = parse_expression(expression)
+    assert parsed_expression == expected_output
 
 
 @pytest.mark.parametrize("input_text, expected_output", [
