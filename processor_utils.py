@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from types import MappingProxyType
 from functools import partial
 import inspect
+from powdr_asm_parser import parse_assembly
 from typing import Any, Callable, Iterator
 
 from powdr import WitnessColumn, Expression, run, PIL
@@ -114,6 +115,7 @@ class AbstractProcessor:
 
     @classmethod
     def run(cls, program: list, num_steps: int = 1024) -> PIL:
+        program = parse_assembly(program)
         instructions = cls._get_instructions(num_steps = num_steps)
         assignment_registers = set()
         for instruction in instructions:
