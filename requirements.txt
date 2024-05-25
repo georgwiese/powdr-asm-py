@@ -1,1 +1,2 @@
 git+https://github.com/georgwiese/powdr-py.git
+pyparsing
