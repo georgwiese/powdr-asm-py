@@ -61,6 +61,9 @@ def transform_vm(registers: List[str],
                  instructions: List[Instruction],
                  program: List[Statement],
                  machines) -> PIL:
+    
+    assert len(machines) <= 1
+    permutation_rhs_selectors = []
 
     # Generate instructions to read into assignment registers
     # Example: X == X_const + read_X_PC * PC + read_X_A * A + read_X_X_free * X_free
@@ -110,12 +113,17 @@ def transform_vm(registers: List[str],
                 if isinstance(constraint, LookupOrPermutationIdentity):
                     assert constraint.left_selector is None
                     constraint.left_selector = instruction_flag
+
+                    if not constraint.is_lookup:
+                        rhs_selector = WitnessColumn(f"sel_{len(permutation_rhs_selectors)}")
+                        permutation_rhs_selectors.append(rhs_selector)
+                        assert constraint.right_selector is None
+                        constraint.right_selector = rhs_selector
+
                     yield constraint
 
     for i, machine in enumerate(machines):
-        # TODO: One selector per permutation
-        selector = WitnessColumn(f"machine_{i}")
-        yield from machine([selector])
+        yield from machine(permutation_rhs_selectors)
 
     # ================================== Generate program fixed columns
     # str -> (inputs, outputs)

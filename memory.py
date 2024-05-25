@@ -8,7 +8,7 @@ def mstore(step: WitnessColumn, addr: FixedColumn, value: WitnessColumn) -> PIL:
     m_step = WitnessColumn("m_step")
     m_value = WitnessColumn("m_value")
     m_is_write = WitnessColumn("m_is_write")
-    yield permutation([NumberExpression(1), step, addr, value], [m_is_write, m_step, m_addr, m_value])
+    yield permutation([NumberExpression(1), addr, step, value], [m_is_write, m_addr, m_step, m_value])
 
 
 def memory(selectors: List[Expression]) -> PIL:
@@ -49,7 +49,7 @@ def memory(selectors: List[Expression]) -> PIL:
     m_diff_lower = WitnessColumn("m_diff_lower")
     m_diff_upper = WitnessColumn("m_diff_upper")
 
-    BIT16 = FixedColumn("BIT16", star(list(range(2**16))))
+    BIT16 = FixedColumn("BIT16", "i & 0xffff")
     yield lookup([m_diff_lower], [BIT16])
     yield lookup([m_diff_upper], [BIT16])
 

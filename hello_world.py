@@ -9,7 +9,7 @@ from processor_utils import AbstractProcessor, instruction
 class RiscVProcessor(AbstractProcessor):
     pc = WitnessColumn("PC")
     registers = ["A", "B"]
-    # machines = [memory.memory]
+    machines = [memory.memory]
 
     @instruction
     def incr(x):
@@ -35,9 +35,9 @@ class RiscVProcessor(AbstractProcessor):
         yield cls.pc.n == x_is_zero * y + (1 - x_is_zero) * (cls.pc + 1)
 
     @instruction
-    def mstore(addr, value, num_steps: int):
-        step = FixedColumn("STEP", values=list(range(num_steps)))
-        # yield from memory.mstore(step, addr, value)
+    def mstore(addr, value):
+        step = FixedColumn("STEP", "i")
+        yield from memory.mstore(step, addr, value)
 
     @instruction(name="return")
     def _return(cls):
@@ -49,8 +49,9 @@ program = """
     branch_if_zero(A-2, 1);
     A <== incr(A + 3);
     A <== decr(A);
+    mstore(3, 4);
     A, B <== funky(A+3, B-4);
     return;
 """
 
-RiscVProcessor.run(parse_assembly(program))
+RiscVProcessor.run(parse_assembly(program), num_steps=2**16)
