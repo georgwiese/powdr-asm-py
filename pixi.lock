@@ -40,7 +40,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ef/a6/62565a6e1cf69e10f5727360368e451d4b7f58beeac6173dc9db836a5b46/iniconfig-2.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/49/df/1fceb2f8900f8639e278b056416d49134fb8d84c5942ffaa01ad34782422/packaging-24.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/5f/e351af9a41f866ac3f1fac4ca0613908d9a41741cfcf2228f4ad853b697d/pluggy-1.5.0-py3-none-any.whl
-      - pypi: git+https://github.com/georgwiese/powdr-py.git@89aad4d5e8b47fdcb1a017e83809704bec3cf24a
+      - pypi: git+https://github.com/georgwiese/powdr-py.git@88a6f19d36e75c4bfa134c3d01ce70f6c0643b3b
       - pypi: https://files.pythonhosted.org/packages/9d/ea/6d76df31432a0e6fdf81681a895f009a4bb47b3c39036db3e1b528191d52/pyparsing-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b4/c1/27a1274b73712232328cb5115030057b7dec377f36a518c83f2e01d4f305/pytest-8.2.1-py3-none-any.whl
       - pypi: .
@@ -63,7 +63,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ef/a6/62565a6e1cf69e10f5727360368e451d4b7f58beeac6173dc9db836a5b46/iniconfig-2.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/49/df/1fceb2f8900f8639e278b056416d49134fb8d84c5942ffaa01ad34782422/packaging-24.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/88/5f/e351af9a41f866ac3f1fac4ca0613908d9a41741cfcf2228f4ad853b697d/pluggy-1.5.0-py3-none-any.whl
-      - pypi: git+https://github.com/georgwiese/powdr-py.git@89aad4d5e8b47fdcb1a017e83809704bec3cf24a
+      - pypi: git+https://github.com/georgwiese/powdr-py.git@88a6f19d36e75c4bfa134c3d01ce70f6c0643b3b
       - pypi: https://files.pythonhosted.org/packages/9d/ea/6d76df31432a0e6fdf81681a895f009a4bb47b3c39036db3e1b528191d52/pyparsing-3.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b4/c1/27a1274b73712232328cb5115030057b7dec377f36a518c83f2e01d4f305/pytest-8.2.1-py3-none-any.whl
       - pypi: .
@@ -534,9 +534,9 @@ packages:
   name: powdr-asm-py
   version: 0.1.0
   path: .
-  sha256: 22618b25690de92a135c85029b3979654a8ee9412258da82978f1b6a94a6c97a
+  sha256: b7c016cec95d9ec9ced1640870ddf5bfa0cb21e22a3c1801e9b6bbd1bc622440
   requires_dist:
-  - powdr-py @ git+https://github.com/georgwiese/powdr-py.git@main
+  - powdr-py @ git+https://github.com/georgwiese/powdr-py.git@88a6f19d36e75c4bfa134c3d01ce70f6c0643b3b
   - pytest
   - pyparsing
   requires_python: '>=3.11'
@@ -544,7 +544,7 @@ packages:
 - kind: pypi
   name: powdr-py
   version: 0.0.1
-  url: git+https://github.com/georgwiese/powdr-py.git@89aad4d5e8b47fdcb1a017e83809704bec3cf24a
+  url: git+https://github.com/georgwiese/powdr-py.git@88a6f19d36e75c4bfa134c3d01ce70f6c0643b3b
 - kind: pypi
   name: pyparsing
   version: 3.1.2

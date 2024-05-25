@@ -1,4 +1,4 @@
-from powdr import star, lookup, FixedColumn, Expression, WitnessColumn, PIL, Identity, generate_pil, NumberExpression
+from powdr import star, lookup, FixedColumn, Expression, WitnessColumn, PIL, Identity, LookupOrPermutationIdentity, PolynomialIdentity, NumberExpression
 from typing import List, Optional, NamedTuple, Tuple
 
 class Instruction(NamedTuple):
@@ -40,22 +40,27 @@ def is_reg_prime(expr: Expression, register_name: str) -> bool:
 def find_assignment(constraints: List[Identity], register_name: str) -> Optional[Expression]:
     assignment = None
     for constraint in constraints:
-        if is_reg_prime(constraint.left, register_name):
-            assignment = constraint.right
-        elif is_reg_prime(constraint.right, register_name):
-            assignment = constraint.left
+        if isinstance(constraint, PolynomialIdentity):
+            if is_reg_prime(constraint.left, register_name):
+                assignment = constraint.right
+            elif is_reg_prime(constraint.right, register_name):
+                assignment = constraint.left
     return assignment
 
 def has_assignment(constraint: Identity, register_names: List[str]) -> bool:
-    return any(is_reg_prime(constraint.left, register_name) or
-               is_reg_prime(constraint.right, register_name)
-               for register_name in register_names)
+
+    if isinstance(constraint, PolynomialIdentity):
+        return any(is_reg_prime(constraint.left, register_name) or
+                is_reg_prime(constraint.right, register_name)
+                for register_name in register_names)
+    return False
         
 
 def transform_vm(registers: List[str],
                  assignment_registers: List[str],
                  instructions: List[Instruction],
-                 program: List[Statement]) -> PIL:
+                 program: List[Statement],
+                 machines) -> PIL:
 
     # Generate instructions to read into assignment registers
     # Example: X == X_const + read_X_PC * PC + read_X_A * A + read_X_X_free * X_free
@@ -100,7 +105,17 @@ def transform_vm(registers: List[str],
         instruction_flag = WitnessColumn(f"instr_{instruction.name}")
         for constraint in instruction.constraints:
             if not has_assignment(constraint, registers + ["PC"]):
-                yield instruction_flag * (constraint.left - constraint.right) == 0
+                if isinstance(constraint, PolynomialIdentity):
+                    yield instruction_flag * (constraint.left - constraint.right) == 0
+                if isinstance(constraint, LookupOrPermutationIdentity):
+                    assert constraint.left_selector is None
+                    constraint.left_selector = instruction_flag
+                    yield constraint
+
+    for i, machine in enumerate(machines):
+        # TODO: One selector per permutation
+        selector = WitnessColumn(f"machine_{i}")
+        yield from machine([selector])
 
     # ================================== Generate program fixed columns
     # str -> (inputs, outputs)

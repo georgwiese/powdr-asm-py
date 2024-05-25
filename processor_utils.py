@@ -46,6 +46,7 @@ def instruction(func: Callable | None = None, *, name: str | None = None):
 
 class AbstractProcessor:
     _instructions = {}
+    machines = []
 
     @classmethod
     def _get_instructions(cls, num_steps: int) -> list[Instruction]:
@@ -108,5 +109,5 @@ class AbstractProcessor:
         assignment_registers = set()
         for instruction in instructions:
             assignment_registers.update(instruction.inputs, instruction.outputs)
-        pil_generator = lambda: transform_vm(cls.registers, list(assignment_registers), instructions, program)
+        pil_generator = lambda: transform_vm(cls.registers, list(assignment_registers), instructions, program, cls.machines)
         run(pil_generator, num_steps, "bn254", powdr_cmd=["pixi", "run", "powdr"])
