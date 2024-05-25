@@ -1,0 +1,29 @@
+[project]
+name = "powdr-asm-py"
+version = "0.1.0"
+description = "Add a short description here"
+authors = [{name = "Jonathan Striebel", email = "jonathan.striebel@gmail.com"}]
+requires-python = ">= 3.11"
+dependencies = ["powdr-py @ git+https://github.com/georgwiese/powdr-py.git"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+[tool.pixi.pypi-dependencies]
+powdr-asm-py = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+clone-powdr = { cmd = "git clone git@github.com:powdr-labs/powdr.git || true", outputs = ["powdr"] }
+install-powdr = { cmd = "cargo install --path cli --features halo2", cwd = "powdr", depends-on = ["clone-powdr"] }
+powdr = "powdr/target/release/powdr"
+
+[tool.pixi.dependencies]
+rust = ">=1.77.2,<1.78"
