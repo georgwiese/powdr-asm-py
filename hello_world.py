@@ -33,14 +33,45 @@ from processor_utils import AbstractProcessor, instruction
 
 
 registers = ["A"]
-assignment_registers = ["X", "Y"]
+assignment_registers = ["X", "Y", "OUT_0", "OUT_1", "OUT_2", "OUT_3"]
 
-instr_incr = Instruction("incr", ["X"], ["Y"], [WitnessColumn("Y") == WitnessColumn("X") + 1])
-instr_decr = Instruction("decr", ["X"], ["Y"], [WitnessColumn("Y") == WitnessColumn("X") - 1])
-instr_assert_zero = Instruction("assert_zero", ["X"], [], [WitnessColumn("X") == 0])
-instr_return = Instruction("return", [], [], [WitnessColumn("PC").n == WitnessColumn("PC")])
 
-instructions = [instr_incr, instr_decr, instr_assert_zero, instr_return]
+class Input(WitnessColumn):
+    pass
+
+
+class Output(WitnessColumn):
+    pass
+
+
+class RiscVProcessor(AbstractProcessor):
+    pc = WitnessColumn("PC")
+
+    @instruction
+    def incr(x):
+        # 1 output witness column
+        return x + 1  
+
+    @instruction
+    def funky(x, y):
+        # 2 output witness columns
+        return x + 1, y + 2
+
+    @instruction
+    def decr(x):
+        return x - 1
+
+    @instruction
+    def assert_zero(x):
+        yield x == 0
+
+    @instruction(name="return")
+    def _return(cls):
+        yield cls.pc.n == cls.pc
+
+
+
+instructions = RiscVProcessor.get_instructions()
 
 #     function main {
 #         A <=X= A + 3;
