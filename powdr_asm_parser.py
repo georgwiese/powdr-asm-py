@@ -1,5 +1,7 @@
 import re
 from typing import List, Dict
+import re
+from asm_to_pil import Statement
 from pyparsing import Word, alphas, nums, Literal, oneOf, Group, ZeroOrMore, Forward, Suppress, Optional, Combine, OneOrMore
 Program = List[Dict]
 
@@ -58,110 +60,55 @@ def parse_expression(expression):
 
     return inputs
 
+def parse_assembly_line(line):
+    # Remove all whitespace
+    line = re.sub(r'\s+', '', line).rstrip(';')
 
-def parse_powdr_assembly_code(input_text: str) -> Program:
-    """
-    :param input_text:
-    # Example usage
-        input_text = function main {
-                 A <=X= A + 3;
-                 A, B <== incr(A + 3);
-                 A <== decr(A);
-                 mstore 4, 5;
-                 return;
-        }
-    :return: Program which is a list of instructions
-    """
-    # Split input into lines and strip unnecessary whitespace
-    lines = [line.strip() for line in input_text.splitlines() if line.strip()]
+    # Regular expressions to match different types of instructions and assignments
+    assignment_pattern = re.compile(r'([\w_,]+)<==(.+)')
+    instruction_pattern = re.compile(r'([\w_]+)\((.*)\)')
 
-    # Initialize an empty program list
-    program = []
+    # Initialize the result dictionary
+    result = {
+        'instruction': '',
+        'outputs': [],
+        'inputs': []
+    }
 
-    # Define grammar for parsing expressions
+    # Check for multi-assignment or single assignment
+    assign_match = assignment_pattern.match(line)
+    if assign_match:
+        outputs, inputs = assign_match.groups()
+        result['outputs'] = outputs.split(',')
+        
+        # Check if the inputs contain an instruction with parentheses
+        instr_match = instruction_pattern.match(inputs)
+        if instr_match:
+            instruction, operands = instr_match.groups()
+            result['instruction'] = instruction
+            result['inputs'] = [parse_expression(o) for o in operands.split(',')]
+        else:
+            result['instruction'] = 'IN_0'
+            result['inputs'] = [parse_expression(inputs)]
+        return result
 
+    # Check for standalone instructions with parentheses
+    instr_match = instruction_pattern.match(line)
+    if instr_match:
+        instruction, operands = instr_match.groups()
+        result['instruction'] = instruction
+        result['inputs'] = [parse_expression(o) for o in operands.split(',')]
+        return result
 
-    variable = Word(alphas)
-    constant = Word(nums)
-    operand = variable | constant
-    assignment_register = Group(Word(alphas))("assignment_register")
-    mult = Literal("*")
-    plus = Literal("+")
-    minus = Literal("-")
-    operator = mult | plus | minus
-    expression_token = operator | operand
-    expression = Group(OneOrMore(expression_token))("expression")
+    # If no match, it's a standalone instruction like "return"
+    result['instruction'] = line
+    return result
 
-    assignment = Group(variable("output") + "<=" + assignment_register + "=" + expression + ";")("assignment")
-
-    instruction = Group(Word(alphas))("instruction")
-    arguments = Optional(expression) + ZeroOrMore("," + expression)
-    instruction_with_one_or_more_outputs = Group(variable + ZeroOrMore("," + variable) + "<==" + instruction + "(" + arguments + ");")("instruction_with_one_or_more_outputs")
-
-    instruction_with_no_outputs = Group(instruction + arguments + ";")("instruction_with_no_outputs")
-
-    instruction_with_no_inputs_and_no_outputs = Group(instruction + ";")("instruction_with_no_inputs_and_no_outputs")
-
-
-
-    instruction_line = Forward()
-    instruction_line <<= assignment | instruction_with_one_or_more_outputs | instruction_with_no_outputs | instruction_with_no_inputs_and_no_outputs
-
-    for line in lines[1:-1]:
-        parse_result = instruction_line.parseString(line, parseAll=True)
-        if parse_result.assignment:
-            program.append({
-                        "inputs": parse_expression("".join(parse_result.assignment.expression)),
-                        "instruction": parse_result.assignment.assignment_register[0],
-                        "outputs": [parse_result.assignment.output]
-            })
-        elif parse_result.instruction_with_one_or_more_outputs:
-            program.append({
-                        "inputs": parse_expression("".join(parse_result.instruction_with_one_or_more_outputs.expression)),
-                        "instruction": parse_result.instruction_with_one_or_more_outputs.instruction[0],
-                        "outputs": [parse_result.instruction_with_one_or_more_outputs[0]]  # TODO handle multiple outputs
-            })
-
-    ## Regular expressions for matching different parts of the instructions
-    #assign_regex = re.compile(r"(\w+)\s*<=X=\s*(.+);")
-    #incr_regex = re.compile(r"(\w+)\s*<==\s*incr\((.+)\);")
-    #decr_regex = re.compile(r"(\w+)\s*<==\s*decr\((.+)\);")
-    #return_regex = re.compile(r"return;")
-#
-#
-    #    if match := assign_regex.match(line):
-    #        output, expression = match.groups()
-    #        inputs = parse_expression(expression)
-    #        program.append({
-    #            "inputs": inputs,
-    #            "instruction": "X",
-    #            "outputs": [output]
-    #        })
-    #    elif match := incr_regex.match(line):
-    #        output, expression = match.groups()
-    #        inputs = parse_expression(expression)
-    #        program.append({
-    #            "inputs": inputs,
-    #            "instruction": "incr",
-    #            "outputs": [output]
-    #        })
-    #    elif match := decr_regex.match(line):
-    #        output, expression = match.groups()
-    #        inputs = parse_expression(expression)
-    #        program.append({
-    #            "inputs": inputs,
-    #            "instruction": "decr",
-    #            "outputs": [output]
-    #        })
-    #    elif return_regex.match(line):
-    #        program.append({
-    #            "inputs": [],
-    #            "instruction": "_return",
-    #            "outputs": []
-    #        })
-
-    return program
-
-
-
-
+def parse_assembly(program):
+    result = []
+    for line in program.split('\n'):
+        if line:
+            parsed_line = parse_assembly_line(line)
+            statement = Statement(parsed_line['instruction'], parsed_line['inputs'], parsed_line['outputs'])
+            result.append(statement)
+    return result

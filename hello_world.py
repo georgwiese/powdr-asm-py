@@ -2,7 +2,7 @@ from powdr import WitnessColumn, FixedColumn
 
 import std
 import memory
-from asm_to_pil import Statement
+from powdr_asm_parser import parse_assembly
 from processor_utils import AbstractProcessor, instruction
 
 
@@ -42,24 +42,14 @@ class RiscVProcessor(AbstractProcessor):
     def _return(cls):
         yield cls.pc.n == cls.pc
 
-#     function main {
-#         A <=X= A + 3;
-#         A <== decr(A);
-#         branch_if_zero(A-2, 1)
-#         A <== incr(A + 3);
-#         A <== decr(A);
-#         A, B <== funky(A+3, B-4)
-#         return;
-#     }
+program = """
+    A <== A + 3;
+    A <== decr(A);
+    branch_if_zero(A-2, 1);
+    A <== incr(A + 3);
+    A <== decr(A);
+    A, B <== funky(A+3, B-4);
+    return;
+"""
 
-program = [
-    Statement("IN_0", [[("A", 1), ("CONST", 3)]], ["A"]),
-    Statement("decr", [[("A", 1)]], ["A"]),
-    Statement("branch_if_zero", [[("A", 1), ("CONST", -2)], [("CONST", 1)]], []),
-    Statement("incr", [[("A", 1), ("CONST", 3)]], ["A"]),
-    Statement("decr", [[("A", 1)]], ["A"]),
-    Statement("funky", [[("A", 1), ("CONST", 3)], [("B", 1), ("CONST", 5)]], ["A", "B"]),
-    Statement("return", [], [])
-]
-
-RiscVProcessor.run(program)
+RiscVProcessor.run(parse_assembly(program))
