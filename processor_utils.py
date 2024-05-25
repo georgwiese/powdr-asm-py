@@ -48,7 +48,7 @@ class AbstractProcessor:
     _instructions = {}
 
     @classmethod
-    def get_instructions(cls):
+    def get_instructions(cls, num_steps: int):
         instructions = []
         instruction_fns = inspect.getmembers(
             cls,
@@ -59,25 +59,23 @@ class AbstractProcessor:
             name = instruction_fn._instruction_name
             print(name)
             signature = inspect.signature(instruction_fn)
-            parameters = list(signature.parameters)
-            if _parameters_start_with_cls(signature.parameters):
-                parameters = parameters[1:]
-                args = [cls]
-            else:
-                args = []
 
-            # For now, we capitalize the input var-names to stay close to the
-            # template, but this should use some numbering-schema later
-            # to re-use the same registers where possible.
-            # Also, the inputs and output could use the same numbered namespace
-            # for efficiency.
-            kwargs = {
-                parameter: WitnessColumn(parameter.upper()) for parameter in parameters
-            }
-            input_columns = list(kwargs.values())
+            # The inputs and output could use the same numbered namespace
+            # for efficiency in the future:
+            kwargs = {}
+            input_columns = []
+            for parameter in signature.parameters:
+                if parameter == "cls":
+                    kwargs["cls"] = cls
+                elif parameter == "num_steps":
+                    kwargs["num_steps"] = num_steps
+                else:
+                    column = WitnessColumn(f"IN_{len(input_columns)}")
+                    kwargs[parameter] = column
+                    input_columns.append(column)
 
             yielded_constraints, output_expressions = _collect_yielded_and_return(
-                instruction_fn(*args, **kwargs)
+                instruction_fn(**kwargs)
             )
 
             if output_expressions is None:
