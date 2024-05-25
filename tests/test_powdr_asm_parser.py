@@ -21,6 +21,31 @@ def test_parse_expression(expression, expected_output):
             """function main {
                  A <=X= A + 3;
                  A <== incr(A + 3);
+            }""",
+            [
+                {
+                    "inputs": [[("A", 1), ("CONST", 3)]],
+                    "instruction": "X",
+                    "outputs": ["A"]
+                },
+                {
+                    "inputs": [[("A", 1), ("CONST", 3)]],
+                    "instruction": "incr",
+                    "outputs": ["A"]
+                },
+            ]
+    ),
+
+])
+def test_parse_assembly_code_simple(input_text, expected_output):
+    parsed_program = parse_powdr_assembly_code(input_text)
+    assert parsed_program == expected_output
+
+@pytest.mark.parametrize("input_text, expected_output", [
+    (
+            """function main {
+                 A <=X= A + 3;
+                 A <== incr(A + 3);
                  A <== decr(A);
                  return;
             }""",

@@ -81,8 +81,8 @@ def parse_powdr_assembly_code(input_text: str) -> Program:
     # Define grammar for parsing expressions
 
 
-    variable = Group(Word(alphas))("variable")
-    constant = Group(Word(nums))("constant")
+    variable = Word(alphas)
+    constant = Word(nums)
     operand = variable | constant
     assignment_register = Group(Word(alphas))("assignment_register")
     mult = Literal("*")
@@ -92,7 +92,7 @@ def parse_powdr_assembly_code(input_text: str) -> Program:
     expression_token = operator | operand
     expression = Group(OneOrMore(expression_token))("expression")
 
-    assignment = Group(variable + "<=" + assignment_register + "=" + expression + ";")("assignment")
+    assignment = Group(variable("output") + "<=" + assignment_register + "=" + expression + ";")("assignment")
 
     instruction = Group(Word(alphas))("instruction")
     arguments = Optional(expression) + ZeroOrMore("," + expression)
@@ -107,13 +107,19 @@ def parse_powdr_assembly_code(input_text: str) -> Program:
     instruction_line = Forward()
     instruction_line <<= assignment | instruction_with_one_or_more_outputs | instruction_with_no_outputs | instruction_with_no_inputs_and_no_outputs
 
-    for line in lines[1:]:
+    for line in lines[1:-1]:
         parse_result = instruction_line.parseString(line, parseAll=True)
         if parse_result.assignment:
             program.append({
-                        "inputs": parse_result.assignment.expression,
-                        "instruction": "X",
-                        "outputs": []
+                        "inputs": parse_expression("".join(parse_result.assignment.expression)),
+                        "instruction": parse_result.assignment.assignment_register[0],
+                        "outputs": [parse_result.assignment.output]
+            })
+        elif parse_result.instruction_with_one_or_more_outputs:
+            program.append({
+                        "inputs": parse_expression("".join(parse_result.instruction_with_one_or_more_outputs.expression)),
+                        "instruction": parse_result.instruction_with_one_or_more_outputs.instruction[0],
+                        "outputs": [parse_result.instruction_with_one_or_more_outputs[0]]  # TODO handle multiple outputs
             })
 
     ## Regular expressions for matching different parts of the instructions
