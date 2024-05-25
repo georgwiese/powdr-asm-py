@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add a short description here"
 authors = [{name = "Jonathan Striebel", email = "jonathan.striebel@gmail.com"}]
 requires-python = ">= 3.11"
-dependencies = ["powdr-py @ git+https://github.com/georgwiese/powdr-py.git"]
+dependencies = ["powdr-py @ git+https://github.com/georgwiese/powdr-py.git", "pytest"]
 
 [build-system]
 requires = ["setuptools"]
