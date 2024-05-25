@@ -18,6 +18,9 @@ https://pixi.sh/latest/
 # Install the project requirements
 pixi install
 pixi run install-powdr
+
+# Enter the pixi environment
+pixi shell
 ```
 
 # Misc
