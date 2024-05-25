@@ -1,5 +1,16 @@
 import pytest
-from powdr_asm_parser import parse_powdr_assembly_code
+from powdr_asm_parser import parse_powdr_assembly_code, parse_expression
+
+
+@pytest.mark.parametrize("expression, expected_output", [
+    ("A + 3", [("A", 1), ("CONST", 3)]),
+    ("B * 6 + 1", [("B", 6), ("CONST", 1)]),
+    ("5 + 10", [("CONST", 5), ("CONST", 10)]),
+    ("-A", [("A", -1)]),
+    ("-2 * A + 1", [("A", -2), ("CONST", 1)])
+])
+def test_parse_expression(expression, expected_output):
+    assert parse_expression(expression) == expected_output
 
 
 @pytest.mark.parametrize("input_text, expected_output", [
