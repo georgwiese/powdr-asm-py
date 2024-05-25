@@ -136,6 +136,42 @@ def test_parse_expression(expression, expected_output):
                     "outputs": []
                 }
             ]
+    ),
+(
+            """input_text = function main {
+                 A <=X= A + 3;
+                 A, B <== incr(A + 3);
+                 A <== decr(A);
+                 mstore 4, 3 * A + 5;
+                 return;
+            }""",
+            [
+                {
+                    "inputs": [[("A", 1), ("CONST", 3)]],
+                    "instruction": "X",
+                    "outputs": ["A"]
+                },
+                {
+                    "inputs": [[("A", 1), ("CONST", 3)]],
+                    "instruction": "incr",
+                    "outputs": ["A", "B"]
+                },
+                {
+                    "inputs": [[("A", 1)]],
+                    "instruction": "decr",
+                    "outputs": ["A"]
+                },
+                {
+                    "inputs": [[("CONST", 4)], [("A", 3), ("CONST", 5)]],
+                    "instruction": "mstore",
+                    "outputs": []
+                },
+                {
+                    "inputs": [],
+                    "instruction": "_return",
+                    "outputs": []
+                }
+            ]
     )
 ])
 def test_parse_assembly_code(input_text, expected_output):

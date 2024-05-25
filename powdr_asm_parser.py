@@ -65,8 +65,9 @@ def parse_powdr_assembly_code(input_text: str) -> Program:
     # Example usage
         input_text = function main {
                  A <=X= A + 3;
-                 A <== incr(A + 3);
+                 A, B <== incr(A + 3);
                  A <== decr(A);
+                 mstore 4, 5;
                  return;
         }
     :return: Program which is a list of instructions
@@ -77,43 +78,81 @@ def parse_powdr_assembly_code(input_text: str) -> Program:
     # Initialize an empty program list
     program = []
 
-    # Regular expressions for matching different parts of the instructions
-    assign_regex = re.compile(r"(\w+)\s*<=X=\s*(.+);")
-    incr_regex = re.compile(r"(\w+)\s*<==\s*incr\((.+)\);")
-    decr_regex = re.compile(r"(\w+)\s*<==\s*decr\((.+)\);")
-    return_regex = re.compile(r"return;")
+    # Define grammar for parsing expressions
 
-    for line in lines:
-        if match := assign_regex.match(line):
-            output, expression = match.groups()
-            inputs = _parse_expression(expression)
+
+    variable = Group(Word(alphas))("variable")
+    constant = Group(Word(nums))("constant")
+    operand = variable | constant
+    assignment_register = Group(Word(alphas))("assignment_register")
+    mult = Literal("*")
+    plus = Literal("+")
+    minus = Literal("-")
+    operator = mult | plus | minus
+    expression_token = operator | operand
+    expression = Group(OneOrMore(expression_token))("expression")
+
+    assignment = Group(variable + "<=" + assignment_register + "=" + expression + ";")("assignment")
+
+    instruction = Group(Word(alphas))("instruction")
+    arguments = Optional(expression) + ZeroOrMore("," + expression)
+    instruction_with_one_or_more_outputs = Group(variable + ZeroOrMore("," + variable) + "<==" + instruction + "(" + arguments + ");")("instruction_with_one_or_more_outputs")
+
+    instruction_with_no_outputs = Group(instruction + arguments + ";")("instruction_with_no_outputs")
+
+    instruction_with_no_inputs_and_no_outputs = Group(instruction + ";")("instruction_with_no_inputs_and_no_outputs")
+
+
+
+    instruction_line = Forward()
+    instruction_line <<= assignment | instruction_with_one_or_more_outputs | instruction_with_no_outputs | instruction_with_no_inputs_and_no_outputs
+
+    for line in lines[1:]:
+        parse_result = instruction_line.parseString(line, parseAll=True)
+        if parse_result.assignment:
             program.append({
-                "inputs": inputs,
-                "instruction": "X",
-                "outputs": [output]
+                        "inputs": parse_result.assignment.expression,
+                        "instruction": "X",
+                        "outputs": []
             })
-        elif match := incr_regex.match(line):
-            output, expression = match.groups()
-            inputs = _parse_expression(expression)
-            program.append({
-                "inputs": inputs,
-                "instruction": "incr",
-                "outputs": [output]
-            })
-        elif match := decr_regex.match(line):
-            output, expression = match.groups()
-            inputs = _parse_expression(expression)
-            program.append({
-                "inputs": inputs,
-                "instruction": "decr",
-                "outputs": [output]
-            })
-        elif return_regex.match(line):
-            program.append({
-                "inputs": [],
-                "instruction": "_return",
-                "outputs": []
-            })
+
+    ## Regular expressions for matching different parts of the instructions
+    #assign_regex = re.compile(r"(\w+)\s*<=X=\s*(.+);")
+    #incr_regex = re.compile(r"(\w+)\s*<==\s*incr\((.+)\);")
+    #decr_regex = re.compile(r"(\w+)\s*<==\s*decr\((.+)\);")
+    #return_regex = re.compile(r"return;")
+#
+#
+    #    if match := assign_regex.match(line):
+    #        output, expression = match.groups()
+    #        inputs = parse_expression(expression)
+    #        program.append({
+    #            "inputs": inputs,
+    #            "instruction": "X",
+    #            "outputs": [output]
+    #        })
+    #    elif match := incr_regex.match(line):
+    #        output, expression = match.groups()
+    #        inputs = parse_expression(expression)
+    #        program.append({
+    #            "inputs": inputs,
+    #            "instruction": "incr",
+    #            "outputs": [output]
+    #        })
+    #    elif match := decr_regex.match(line):
+    #        output, expression = match.groups()
+    #        inputs = parse_expression(expression)
+    #        program.append({
+    #            "inputs": inputs,
+    #            "instruction": "decr",
+    #            "outputs": [output]
+    #        })
+    #    elif return_regex.match(line):
+    #        program.append({
+    #            "inputs": [],
+    #            "instruction": "_return",
+    #            "outputs": []
+    #        })
 
     return program
 
