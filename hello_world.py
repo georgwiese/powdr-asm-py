@@ -1,7 +1,7 @@
-from powdr import WitnessColumn, Identity, generate_pil, run, PIL
+from powdr import WitnessColumn, run, PIL
 from asm_to_pil import transform_vm, Instruction, Statement
-from typing import Tuple
-from typing import List, Tuple
+
+from processor_utils import AbstractProcessor, instruction
 
 
 # machine HelloWorld with degree: 16 {
@@ -31,6 +31,7 @@ from typing import List, Tuple
 #     }
 # }
 
+
 registers = ["A"]
 assignment_registers = ["X", "Y"]
 
@@ -59,4 +60,5 @@ program = [
 def hello_world() -> PIL:
     return transform_vm(registers, assignment_registers, instructions, program)
 
-run(hello_world, 1024, "bn254")
+run(hello_world, 1024, "bn254", powdr_cmd=["pixi", "run", "powdr"])
+# print(generate_pil(lambda: transform_vm(registers, assignment_registers, instructions, program), 1024))

@@ -1,4 +1,10 @@
 env3
 venv
 .idea
+__pycache__/
 
+# pixi environments
+.pixi
+*.egg-info
+
+/powdr
