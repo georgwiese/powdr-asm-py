@@ -1,12 +1,9 @@
-from powdr import WitnessColumn, run, PIL, FixedColumn
+from powdr import WitnessColumn, FixedColumn
 
 import std
 import memory
-from asm_to_pil import transform_vm, Statement
+from asm_to_pil import Statement
 from processor_utils import AbstractProcessor, instruction
-
-
-assignment_registers = ["IN_0", "IN_1", "IN_2", "IN_3", "OUT_0", "OUT_1", "OUT_2", "OUT_3"]
 
 
 class RiscVProcessor(AbstractProcessor):
@@ -44,12 +41,6 @@ class RiscVProcessor(AbstractProcessor):
     @instruction(name="return")
     def _return(cls):
         yield cls.pc.n == cls.pc
-
-    @classmethod
-    def run(cls, program: list, num_steps: int = 1024) -> PIL:
-        instructions = cls.get_instructions(num_steps = num_steps)
-        pil_generator = lambda: transform_vm(cls.registers, assignment_registers, instructions, program)
-        run(pil_generator, num_steps, "bn254", powdr_cmd=["pixi", "run", "powdr"])
 
 #     function main {
 #         A <=X= A + 3;
