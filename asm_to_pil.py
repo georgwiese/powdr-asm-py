@@ -1,5 +1,30 @@
 from powdr import star, lookup, FixedColumn, Expression, WitnessColumn, PIL, Identity, generate_pil, NumberExpression
-from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import List, Optional, NamedTuple, Tuple
+
+class Instruction(NamedTuple):
+    # The name of the instruction
+    name: str
+    # Assignment registers used as inputs
+    inputs: List[str]
+    # Assignment registers used as outputs
+    outputs: List[str]
+    # Constraints for the instruction
+    constraints: List[Identity]
+
+class Statement(NamedTuple):
+    # If the instruction name is the name of an assignment register,
+    # it means that this row is an assignment via that register.
+    instruction: str
+
+    # One input for assignments, otherwise the number of inputs
+    # should match the number of inputs to the instruction.
+    # Each input is a list of (<register name>, <factor>) tuples.
+    # A special "register" "CONST" is part of the program.
+    # For example, [("A", 1), ("CONST", 3)] corresponds to: A * 1 + 3.
+    inputs: List[List[Tuple[str, int]]]
+
+    # Output register names
+    outputs: List[str]
 
 def read_name(assignment_register: str, register: str) -> str:
     return f"read_{assignment_register}_{register}"
@@ -27,7 +52,10 @@ def has_assignment(constraint: Identity, register_names: List[str]) -> bool:
                for register_name in register_names)
         
 
-def transform_vm(registers, assignment_registers, instructions, program) -> PIL:
+def transform_vm(registers: List[str],
+                 assignment_registers: List[str],
+                 instructions: List[Instruction],
+                 program: List[Statement]) -> PIL:
 
     # Generate instructions to read into assignment registers
     # Example: X == X_const + read_X_PC * PC + read_X_A * A + read_X_X_free * X_free
@@ -55,11 +83,10 @@ def transform_vm(registers, assignment_registers, instructions, program) -> PIL:
 
         # Handle instructions with constraints like: PC' = PC
         for instruction in instructions:
-            _, _, constraints = instruction()
-            assignment = find_assignment(constraints, register)
+            assignment = find_assignment(instruction.constraints, register)
             if assignment is not None:
-                expr = expr + WitnessColumn(f"instr_{instruction.__name__}") * assignment
-                flag_sum = flag_sum + WitnessColumn(f"instr_{instruction.__name__}")
+                expr = expr + WitnessColumn(f"instr_{instruction.name}") * assignment
+                flag_sum = flag_sum + WitnessColumn(f"instr_{instruction.name}")
 
         register_col = WitnessColumn(register)
         IS_FIRST = FixedColumn("IS_FIRST", [1] + star([0]))
@@ -70,49 +97,46 @@ def transform_vm(registers, assignment_registers, instructions, program) -> PIL:
     
     # Generate conditional instruction constraints
     for instruction in instructions:
-        _, _, constraints = instruction()
-        instruction_flag = WitnessColumn(f"instr_{instruction.__name__}")
-        for constraint in constraints:
+        instruction_flag = WitnessColumn(f"instr_{instruction.name}")
+        for constraint in instruction.constraints:
             if not has_assignment(constraint, registers + ["PC"]):
                 yield instruction_flag * (constraint.left - constraint.right) == 0
 
     # ================================== Generate program fixed columns
     # str -> (inputs, outputs)
-    instruction_by_name = {instruction.__name__: (instruction()[0], instruction()[1])
-                           for instruction in instructions}
+    instruction_by_name = {instruction.name: instruction for instruction in instructions}
     # For every assignment register, there is an "instruction" with the same input and output
     for assignment_register in assignment_registers:
-        instruction_by_name[assignment_register] = ([assignment_register], [assignment_register])
+        instruction_by_name[assignment_register] = Instruction(
+            f"assign_via_{assignment_register}",
+            [assignment_register],
+            [assignment_register],
+            []
+        )
     
     # Program columns: line number, instruction flags, read flags, write flags
     program_column_names = ["line"] + \
-        [f"instr_{instruction.__name__}" for instruction in instructions] + \
+        [f"instr_{instruction.name}" for instruction in instructions] + \
         [read_name(assignment_register, register) for assignment_register in assignment_registers for register in registers + ["PC"] + [f"{assignment_register}_free"]] + \
         [write_name(assignment_register, register) for assignment_register in assignment_registers for register in registers + ["PC"]] + \
         [f"{assignment_register}_const" for assignment_register in assignment_registers]
     program_column_values = {name: [] for name in program_column_names}
 
     for i, statement in enumerate(program):
-        # Example statement:
-        # {
-        #     "inputs": [[("A", 1), ("CONST", 3)]],
-        #     "instruction": "incr",
-        #     "outputs": ["A"]
-        # }
-        input_assignment_registers = instruction_by_name[statement["instruction"]][0]
-        output_assignment_registers = instruction_by_name[statement["instruction"]][1]
-        assert len(input_assignment_registers) == len(statement["inputs"])
-        assert len(output_assignment_registers) == len(statement["outputs"])
+        input_assignment_registers = instruction_by_name[statement.instruction].inputs
+        output_assignment_registers = instruction_by_name[statement.instruction].outputs
+        assert len(input_assignment_registers) == len(statement.inputs)
+        assert len(output_assignment_registers) == len(statement.outputs)
 
         # Line number
         program_column_values["line"].append(i)
 
         # Instruction flags
-        if statement['instruction'] not in assignment_registers:
-            program_column_values[f"instr_{statement['instruction']}"].append(1)
+        if statement.instruction not in assignment_registers:
+            program_column_values[f"instr_{statement.instruction}"].append(1)
 
         # Read flags and constants
-        for assignment_register, inputs in zip(input_assignment_registers, statement["inputs"]):
+        for assignment_register, inputs in zip(input_assignment_registers, statement.inputs):
             for register, factor in inputs:
                 if register == "CONST":
                     program_column_values[f"{assignment_register}_const"].append(factor)
@@ -120,9 +144,9 @@ def transform_vm(registers, assignment_registers, instructions, program) -> PIL:
                     program_column_values[read_name(assignment_register, register)].append(factor)
         
         # Write flags
-        for assignment_register, output, instruction in zip(output_assignment_registers, statement["outputs"], statement["instruction"]):
+        for assignment_register, output in zip(output_assignment_registers, statement.outputs):
             program_column_values[write_name(assignment_register, output)].append(1)
-            if instruction not in assignment_registers:
+            if statement.instruction not in assignment_registers:
                 program_column_values[read_name(assignment_register, f"{assignment_register}_free")].append(1)
 
         # All other columns should be padded with 0 to have the same length

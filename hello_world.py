@@ -1,5 +1,5 @@
 from powdr import WitnessColumn, Identity, generate_pil, run, PIL
-from asm_to_pil import transform_vm
+from asm_to_pil import transform_vm, Instruction, Statement
 from typing import Tuple
 from typing import List, Tuple
 
@@ -34,26 +34,12 @@ from typing import List, Tuple
 registers = ["A"]
 assignment_registers = ["X", "Y"]
 
-# Instructions return inputs, outputs, and (conditional) constraints
-def incr() -> Tuple[List[str], List[str], List[Identity]]:
-    X = WitnessColumn("X")
-    Y = WitnessColumn("Y")
-    return (["X"], ["Y"], [Y == X + 1])
+instr_incr = Instruction("incr", ["X"], ["Y"], [WitnessColumn("Y") == WitnessColumn("X") + 1])
+instr_decr = Instruction("decr", ["X"], ["Y"], [WitnessColumn("Y") == WitnessColumn("X") - 1])
+instr_assert_zero = Instruction("assert_zero", ["X"], [], [WitnessColumn("X") == 0])
+instr_return = Instruction("return", [], [], [WitnessColumn("PC").n == WitnessColumn("PC")])
 
-def decr() -> Tuple[List[str], List[str], List[Identity]]:
-    X = WitnessColumn("X")
-    Y = WitnessColumn("Y")
-    return (["X"], ["Y"], [Y == X - 1])
-
-def assert_zero() -> Tuple[List[str], List[str], List[Identity]]:
-    X = WitnessColumn("X")
-    return (["X"], [], [X == 0])
-
-def _return() -> Tuple[List[str], List[str], List[Identity]]:
-    PC = WitnessColumn("PC")
-    return ([], [], [PC.n == PC])
-
-instructions = [incr, decr, assert_zero, _return]
+instructions = [instr_incr, instr_decr, instr_assert_zero, instr_return]
 
 #     function main {
 #         A <=X= A + 3;
@@ -63,34 +49,10 @@ instructions = [incr, decr, assert_zero, _return]
 #     }
 
 program = [
-    {
-        # One input for assignments, otherwise the number of inputs
-        # should match the number of inputs to the instruction.
-        # Each input is a list of (<register name>, <factor>) tuples.
-        # A special "register" "CONST" is part of the program.
-        # For example, this input corresponds to: A * 1 + 3.
-        "inputs": [[("A", 1), ("CONST", 3)]],
-        # If the instruction name is the name of an assignment register,
-        # it means that this row is an assignment via that register.
-        "instruction": "X",
-        # Register names
-        "outputs": ["A"]
-    },
-    {
-        "inputs": [[("A", 1), ("CONST", 3)]],
-        "instruction": "incr",
-        "outputs": ["A"]
-    },
-    {
-        "inputs": [[("A", 1)]],
-        "instruction": "decr",
-        "outputs": ["A"]
-    },
-    {
-        "inputs": [],
-        "instruction": "_return",
-        "outputs": []
-    }
+    Statement("X", [[("A", 1), ("CONST", 3)]], ["A"]),
+    Statement("incr", [[("A", 1), ("CONST", 3)]], ["A"]),
+    Statement("decr", [[("A", 1)]], ["A"]),
+    Statement("return", [], [])
 ]
 
 
