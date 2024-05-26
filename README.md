@@ -1,13 +1,13 @@
-# Setup
+# Pywdr - zk-VMs in Python
 
-<!-- Install the `powdr` command-line tool:
+This project is a submission to [ETH Berlin](https://ethberlin.org/), building on [powdr](https://powdr.org) and [`powdr-py`](https://github.com/georgwiese/powdr-py).
 
-```sh
-git clone git@github.com:powdr-labs/powdr.git
-cd powdr
-cargo install --path cli --features halo2
-powdr --help
-``` -->
+With this library, you can specify zk-VMs succinctly in Python. For example, see:
+- [`hello_world.py`](./hello_world.py): An example VM with several registers, control flow instructions, and memory.
+- [`hello_world.asm`](./hello_world.asm): An assembly program written for the "Hello world" processor defined above.
+- [`demo.py`](./demo.py): The main python program to compile the zk-VM and generate a proof for the correct execution of the assembly program.
+
+## Setup
 
 ```sh
 # Install pixi
@@ -22,13 +22,3 @@ pixi run install-powdr
 # Enter the pixi environment
 pixi shell
 ```
-
-# Misc
-
-Update powdr-py:
-```sh
-pixi remove --pypi powdr-py
-pixi add --pypi "powdr-py @ git+https://github.com/georgwiese/powdr-py.git"
-```
-
-rustup target add riscv32imac-unknown-none-elf
