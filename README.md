@@ -4,7 +4,7 @@ This project is a submission to [ETH Berlin](https://ethberlin.org/), building o
 
 With this library, you can specify zk-VMs succinctly in Python. For example, see:
 - [`src/hello_world.py`](./src/hello_world.py): An example VM with several registers, control flow instructions, and memory.
-- [`src/hello_world.asm`](./src/hello_world.asm): An assembly program written for the "Hello world" processor defined above.
+- [`hello_world.asm`](./hello_world.asm): An assembly program written for the "Hello world" processor defined above.
 - [`src/demo.py`](./src/demo.py): The main python program to compile the zk-VM and generate a proof for the correct execution of the assembly program.
 
 ## Setup
