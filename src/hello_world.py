@@ -15,17 +15,17 @@ class HelloWorldProcessor(AbstractProcessor):
         return x * y
     
     @instruction
-    def assert_zero(x):
-        yield x == 0
+    def assert_zero(value):
+        yield value == 0
 
     @instruction
     def jump(cls, addr):
         yield cls.pc.n == addr
     
     @instruction
-    def branch_if_zero(cls, x, y):
-        x_is_zero = yield from std.is_zero(x)
-        yield cls.pc.n == x_is_zero * y + (1 - x_is_zero) * (cls.pc + 1)
+    def branch_if_zero(cls, value, address):
+        x_is_zero = yield from std.is_zero(value)
+        yield cls.pc.n == x_is_zero * address + (1 - x_is_zero) * (cls.pc + 1)
 
     @instruction
     def mstore(addr, value):
